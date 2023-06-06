@@ -10,12 +10,9 @@ from kortex_api.autogen.client_stubs.BaseClientRpc import BaseClient
 from kortex_api.autogen.client_stubs.BaseCyclicClientRpc import BaseCyclicClient
 from kortex_api.autogen.messages import Base_pb2, BaseCyclic_pb2, Common_pb2
 from kortex_api.Exceptions.KServerException import KServerException
-from kortex_api.autogen.client_stubs.VisionConfigClientRpc import VisionConfigClient
-from kortex_api.autogen.client_stubs.DeviceManagerClientRpc import DeviceManagerClient
 from kortex_api.autogen.messages import DeviceConfig_pb2, Session_pb2, DeviceManager_pb2, VisionConfig_pb2
 import ObjectDetection
 import calculate_trajectory
-import commons.parameters as pr
 
 # Maximum allowed waiting time during actions (in seconds)
 TIMEOUT_DURATION = 20
@@ -162,21 +159,6 @@ def autofocus(vision_config, vision_device_id):
     sensor_focus_action.sensor = VisionConfig_pb2.SENSOR_COLOR
     sensor_focus_action.focus_action = VisionConfig_pb2.FOCUSACTION_START_CONTINUOUS_FOCUS
     vision_config.DoSensorFocusAction(sensor_focus_action, vision_device_id)
-
-
-
-# def record_actual_pos(base, sampling_frequency):
-#     global movement_completed
-#     start_time = time.time()
-#     while not movement_completed:
-#         print(time.time() - start_time)
-#         try:
-#             input_joint_angles = base.GetMeasuredJointAngles()
-#             current_cartesian = base.ComputeForwardKinematics(input_joint_angles)
-#             print(current_cartesian)
-#         except Exception as expection:
-#             print("FK failed", str(expection))
-#         time.sleep(sampling_frequency)
 
 
 # Function to record video
@@ -467,7 +449,6 @@ if __name__ == '__main__':
     args = utilities.parseConnectionArguments()
     args.ip = '192.168.1.10'
 
-
     # Create connection to the device and get the router
     with utilities.DeviceConnection.createTcpConnection(args) as router:
 
@@ -501,16 +482,8 @@ if __name__ == '__main__':
         z_offset_m = np.array([0, 0, CUBE3_HEIGHT])
         z_offset_s = np.array([0, 0, CUBE2_HEIGHT])
 
-
         # 4. Move to vis_safe pos
         move_to_action_position(base, "vision_safe_joint")
-
-        # # Start the video recording thread
-        # global record_enabled
-        # record_enabled = True
-        # video_thread = threading.Thread(target=record_video)
-        # video_thread.start()
-
 
         # 5. generate trajectories
 
@@ -521,58 +494,58 @@ if __name__ == '__main__':
         cur_pos = [current_cartesian.x, current_cartesian.y, current_cartesian.z]
         cur_ori = [current_cartesian.theta_x, current_cartesian.theta_y, current_cartesian.theta_z]
 
-        # # Seq1(vis_safe -> cube L)
-        # print(cur_ori)
-        # print(cube_l_ori)
-        # seq.append(get_waypoints(pre_init_pos=None,
-        #                          init_pos=cur_pos, init_ori=cur_ori,
-        #                          goal_pos=cube_l_pos + z_offset_safe, goal_ori=cube_l_ori,
-        #                          post_goal_pos=cube_l_pos,
-        #                          obst_pos=obst_pos))
-        # # grip.append(0.0)
-        # grip.append(0.375)
-        #
-        # # Seq2(cube L -> goal)
-        # seq.append(get_waypoints(pre_init_pos=cube_l_pos,
-        #                          init_pos=cube_l_pos + z_offset_safe, init_ori=cube_l_ori,
-        #                          goal_pos=goal_pos + z_offset_safe, goal_ori=goal_ori,
-        #                          post_goal_pos=goal_pos,
-        #                          obst_pos=obst_pos))
+        # Seq1(vis_safe -> cube L)
+        print(cur_ori)
+        print(cube_l_ori)
+        seq.append(get_waypoints(pre_init_pos=None,
+                                 init_pos=cur_pos, init_ori=cur_ori,
+                                 goal_pos=cube_l_pos + z_offset_safe, goal_ori=cube_l_ori,
+                                 post_goal_pos=cube_l_pos,
+                                 obst_pos=obst_pos))
         # grip.append(0.0)
-        #
-        # # Seq3 (goal -> cube M)
-        # seq.append(get_waypoints(pre_init_pos=goal_pos,
-        #                          init_pos=goal_pos + z_offset_safe, init_ori=goal_ori,
-        #                          goal_pos=cube_m_pos + z_offset_safe, goal_ori=cube_m_ori,
-        #                          post_goal_pos=cube_m_pos,
-        #                          obst_pos=obst_pos))
-        # # grip.append(0.0)
-        # grip.append(0.375)
-        #
-        # # Seq4 (cube M -> goal)
-        # seq.append(get_waypoints(pre_init_pos=cube_m_pos,
-        #                          init_pos=cube_m_pos + z_offset_safe, init_ori=cube_m_ori,
-        #                          goal_pos=goal_pos + z_offset_safe + z_offset_m, goal_ori=goal_ori,
-        #                          post_goal_pos=goal_pos + z_offset_m,
-        #                          obst_pos=obst_pos))
-        # grip.append(0.0)
+        grip.append(0.375)
 
-        # # Seq5 (goal -> cube S)
-        # seq.append(get_waypoints(pre_init_pos=goal_pos + z_offset_m,
-        #                          init_pos=goal_pos + z_offset_safe + z_offset_m, init_ori=goal_ori,
-        #                          goal_pos=cube_s_pos + z_offset_safe, goal_ori=cube_s_ori,
-        #                          post_goal_pos=cube_s_pos,
-        #                          obst_pos=obst_pos))
-        # # grip.append(0.0)
-        # grip.append(0.495)
-        #
-        # # Seq6 (cube S -> goal)
-        # seq.append(get_waypoints(pre_init_pos=cube_s_pos,
-        #                          init_pos=cube_s_pos + z_offset_safe, init_ori=cube_s_ori,
-        #                          goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_s, goal_ori=goal_ori,
-        #                          post_goal_pos=goal_pos + z_offset_m + z_offset_s,
-        #                          obst_pos=obst_pos))
+        # Seq2(cube L -> goal)
+        seq.append(get_waypoints(pre_init_pos=cube_l_pos,
+                                 init_pos=cube_l_pos + z_offset_safe, init_ori=cube_l_ori,
+                                 goal_pos=goal_pos + z_offset_safe, goal_ori=goal_ori,
+                                 post_goal_pos=goal_pos,
+                                 obst_pos=obst_pos))
+        grip.append(0.0)
+
+        # Seq3 (goal -> cube M)
+        seq.append(get_waypoints(pre_init_pos=goal_pos,
+                                 init_pos=goal_pos + z_offset_safe, init_ori=goal_ori,
+                                 goal_pos=cube_m_pos + z_offset_safe, goal_ori=cube_m_ori,
+                                 post_goal_pos=cube_m_pos,
+                                 obst_pos=obst_pos))
         # grip.append(0.0)
+        grip.append(0.375)
+
+        # Seq4 (cube M -> goal)
+        seq.append(get_waypoints(pre_init_pos=cube_m_pos,
+                                 init_pos=cube_m_pos + z_offset_safe, init_ori=cube_m_ori,
+                                 goal_pos=goal_pos + z_offset_safe + z_offset_m, goal_ori=goal_ori,
+                                 post_goal_pos=goal_pos + z_offset_m,
+                                 obst_pos=obst_pos))
+        grip.append(0.0)
+
+        # Seq5 (goal -> cube S)
+        seq.append(get_waypoints(pre_init_pos=goal_pos + z_offset_m,
+                                 init_pos=goal_pos + z_offset_safe + z_offset_m, init_ori=goal_ori,
+                                 goal_pos=cube_s_pos + z_offset_safe, goal_ori=cube_s_ori,
+                                 post_goal_pos=cube_s_pos,
+                                 obst_pos=obst_pos))
+        # grip.append(0.0)
+        grip.append(0.495)
+
+        # Seq6 (cube S -> goal)
+        seq.append(get_waypoints(pre_init_pos=cube_s_pos,
+                                 init_pos=cube_s_pos + z_offset_safe, init_ori=cube_s_ori,
+                                 goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_s, goal_ori=goal_ori,
+                                 post_goal_pos=goal_pos + z_offset_m + z_offset_s,
+                                 obst_pos=obst_pos))
+        grip.append(0.0)
 
         # 6. execute trajectories
 
@@ -597,30 +570,3 @@ if __name__ == '__main__':
         move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition=safe_pos, log=False)
 
         move_to_action_position(base, "Home")
-
-        # # Set the record_enabled flag to True to signal the recording to stop
-        # record_enabled = False
-        # video_thread.join()
-
-        # for idx, waypointDefinition in enumerate(waypointsDefinition):
-        #     # populate waypoints
-        #     waypoint = waypoints.waypoints.add()
-        #     waypoint.name = "waypoint_" + str(idx)
-        #     waypoint.cartesian_waypoint.CopyFrom(populateCartesianCoordinate(waypointDefinition))
-        #     pose_cartesian = waypoint.cartesian_waypoint.pose
-        #     print(waypoint.name)
-        #     print(pose_cartesian)
-        #
-        #     if idx == 0:
-        #         ref_joint = base.GetMeasuredJointAngles()
-        #     else:
-        #         ref_joint = pose_joint
-        #
-        #     success, pose_joint = IK(base, ref_joint, pose_cartesian)
-        #     if not success:
-        #         print("IK failed")
-        #         break
-
-
-
-
