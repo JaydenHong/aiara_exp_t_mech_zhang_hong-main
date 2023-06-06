@@ -25,7 +25,7 @@ def plot_path(file_name='progress.txt'):
     for name in file_name:
         exp_data = pd.read_table('saved_data00/'+name)
 
-        if 'Pos_1' in exp_data.columns:
+        if 'Pos_1' in exp_data.columns:  # Computed Trajectory
             InitPos_x = exp_data.InitPos_1[0]
             InitPos_y = exp_data.InitPos_2[0]
             InitPos_z = exp_data.InitPos_3[0]
@@ -44,10 +44,11 @@ def plot_path(file_name='progress.txt'):
             ax.plot([InitPos_x], [InitPos_y], [InitPos_z], alpha=0.8, color=(0.2, 0.5, 1), marker="o", markersize=8)
             ax.plot([GoalPos_x], [GoalPos_y], [GoalPos_z], alpha=0.8, color=(128 / 255, 0, 127 / 255), marker="*",
                     markersize=10)
-            Xc, Yc, Zc = data_for_cylinder_along_z(ObstPos_x, ObstPos_y, 0.045, ObstPos_z)
+            # Xc, Yc, Zc = data_for_cylinder_along_z(ObstPos_x, ObstPos_y, 0.045, ObstPos_z)
+            Xc, Yc, Zc = data_for_cylinder_along_z(ObstPos_x, ObstPos_y, 0.045, 0.152)
             ax.plot_surface(Xc, Yc, Zc, color=(255 / 255, 212 / 255, 128 / 255), alpha=0.2)
 
-        elif 'x' in exp_data.columns:
+        elif 'x' in exp_data.columns:  # Executed Trajectory
             CurrPos_x = exp_data.x.to_numpy()
             CurrPos_y = exp_data.y.to_numpy()
             CurrPos_z = exp_data.z.to_numpy()
@@ -67,9 +68,11 @@ def plot_path(file_name='progress.txt'):
 
 
 if __name__ == '__main__':
-    filenames = ['executed_trajectory1.txt', 'executed_trajectory2.txt', 'executed_trajectory3.txt']
+    filenames = ['computed_trajectory1.txt', 'computed_trajectory2.txt', 'computed_trajectory3.txt',
+                 'computed_trajectory4.txt', 'computed_trajectory5.txt', 'computed_trajectory6.txt']
     plot_path(filenames)
-    # for i in range(1,6):
-    #     plot_path(['computed_trajectory{}.txt'.format(i), 'executed_trajectory{}.txt'.format(i)])
+
+    for i in range(1,7):
+        plot_path(['computed_trajectory{}.txt'.format(i), 'executed_trajectory{}.txt'.format(i)])
     plt.show()
 
