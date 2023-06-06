@@ -46,7 +46,19 @@ CUP_RADIUS_SAFE = 0.075
 # Vision Position
 VISION_POS = [0.356, 0.106, 0.562]
 
-FILE_PATH = 'saved_data11/'
+# Base folder name
+base_folder_name = 'saved_data'
+
+# Find existing folders that match the base folder name
+existing_folders = [folder for folder in os.listdir('.') if folder.startswith(base_folder_name)]
+
+# Find the highest numbered folder among the existing matching folders
+folder_numbers = [int(folder[len(base_folder_name):]) for folder in existing_folders
+                    if folder[len(base_folder_name):].isdigit()]
+max_folder_number = max(folder_numbers)+1 if folder_numbers else 0
+FILE_PATH = f'{base_folder_name}{max_folder_number:02}'
+os.mkdir(FILE_PATH)
+
 
 option_dir = 'BC_32'
 
@@ -318,19 +330,13 @@ def populateCartesianCoordinate(waypointInformation):
     return waypoint
 
 
-def move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition):
+def move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition, log=True):
     global movement_completed
 
     # Set servoing mode
     base_servo_mode = Base_pb2.ServoingModeInformation()
     base_servo_mode.servoing_mode = Base_pb2.SINGLE_LEVEL_SERVOING
     base.SetServoingMode(base_servo_mode)
-
-    # Get waypoints
-    product = base.GetProductConfiguration()
-
-    # test code
-    # Base_pb2.ProductConfiguration__pb2.MODEL_ID_L53 == product.model when gen3_6ddof
 
     waypoints = Base_pb2.WaypointList()
 
@@ -355,10 +361,12 @@ def move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition):
         e = threading.Event()
         notification_handle = base.OnNotificationActionTopic(check_for_end_or_abort(e),
                                                              Base_pb2.NotificationOptions())
-        movement_completed = False
-        record_thread = threading.Thread(target=record_actual_pos, args=(base, 0.1))
-        record_thread.start()
+        if log is True:
+            movement_completed = False
+            record_thread = threading.Thread(target=record_actual_pos, args=(base, 0.1))
+            record_thread.start()
         print("Moving cartesian trajectory...")
+
         try:
             base.ExecuteWaypointTrajectory(waypoints)
             print("Waiting for trajectory to finish ...")
@@ -370,8 +378,10 @@ def move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition):
             finished = False
         finally:
             base.Unsubscribe(notification_handle)
-        movement_completed = True
-        record_thread.join()
+
+        if log is True:
+            movement_completed = True
+            record_thread.join()
 
         return finished
     else:
@@ -511,58 +521,58 @@ if __name__ == '__main__':
         cur_pos = [current_cartesian.x, current_cartesian.y, current_cartesian.z]
         cur_ori = [current_cartesian.theta_x, current_cartesian.theta_y, current_cartesian.theta_z]
 
-        # Seq1(vis_safe -> cube L)
-        print(cur_ori)
-        print(cube_l_ori)
-        seq.append(get_waypoints(pre_init_pos=None,
-                                 init_pos=cur_pos, init_ori=cur_ori,
-                                 goal_pos=cube_l_pos + z_offset_safe, goal_ori=cube_l_ori,
-                                 post_goal_pos=cube_l_pos,
-                                 obst_pos=obst_pos))
+        # # Seq1(vis_safe -> cube L)
+        # print(cur_ori)
+        # print(cube_l_ori)
+        # seq.append(get_waypoints(pre_init_pos=None,
+        #                          init_pos=cur_pos, init_ori=cur_ori,
+        #                          goal_pos=cube_l_pos + z_offset_safe, goal_ori=cube_l_ori,
+        #                          post_goal_pos=cube_l_pos,
+        #                          obst_pos=obst_pos))
+        # # grip.append(0.0)
+        # grip.append(0.375)
+        #
+        # # Seq2(cube L -> goal)
+        # seq.append(get_waypoints(pre_init_pos=cube_l_pos,
+        #                          init_pos=cube_l_pos + z_offset_safe, init_ori=cube_l_ori,
+        #                          goal_pos=goal_pos + z_offset_safe, goal_ori=goal_ori,
+        #                          post_goal_pos=goal_pos,
+        #                          obst_pos=obst_pos))
         # grip.append(0.0)
-        grip.append(0.375)
-
-        # Seq2(cube L -> goal)
-        seq.append(get_waypoints(pre_init_pos=cube_l_pos,
-                                 init_pos=cube_l_pos + z_offset_safe, init_ori=cube_l_ori,
-                                 goal_pos=goal_pos + z_offset_safe, goal_ori=goal_ori,
-                                 post_goal_pos=goal_pos,
-                                 obst_pos=obst_pos))
-        grip.append(0.0)
-
-        # Seq3 (goal -> cube M)
-        seq.append(get_waypoints(pre_init_pos=goal_pos,
-                                 init_pos=goal_pos + z_offset_safe, init_ori=goal_ori,
-                                 goal_pos=cube_m_pos + z_offset_safe, goal_ori=cube_m_ori,
-                                 post_goal_pos=cube_m_pos,
-                                 obst_pos=obst_pos))
+        #
+        # # Seq3 (goal -> cube M)
+        # seq.append(get_waypoints(pre_init_pos=goal_pos,
+        #                          init_pos=goal_pos + z_offset_safe, init_ori=goal_ori,
+        #                          goal_pos=cube_m_pos + z_offset_safe, goal_ori=cube_m_ori,
+        #                          post_goal_pos=cube_m_pos,
+        #                          obst_pos=obst_pos))
+        # # grip.append(0.0)
+        # grip.append(0.375)
+        #
+        # # Seq4 (cube M -> goal)
+        # seq.append(get_waypoints(pre_init_pos=cube_m_pos,
+        #                          init_pos=cube_m_pos + z_offset_safe, init_ori=cube_m_ori,
+        #                          goal_pos=goal_pos + z_offset_safe + z_offset_m, goal_ori=goal_ori,
+        #                          post_goal_pos=goal_pos + z_offset_m,
+        #                          obst_pos=obst_pos))
         # grip.append(0.0)
-        grip.append(0.375)
 
-        # Seq4 (cube M -> goal)
-        seq.append(get_waypoints(pre_init_pos=cube_m_pos,
-                                 init_pos=cube_m_pos + z_offset_safe, init_ori=cube_m_ori,
-                                 goal_pos=goal_pos + z_offset_safe + z_offset_m, goal_ori=goal_ori,
-                                 post_goal_pos=goal_pos + z_offset_m,
-                                 obst_pos=obst_pos))
-        grip.append(0.0)
-
-        # Seq5 (goal -> cube S)
-        seq.append(get_waypoints(pre_init_pos=goal_pos + z_offset_m,
-                                 init_pos=goal_pos + z_offset_safe + z_offset_m, init_ori=goal_ori,
-                                 goal_pos=cube_s_pos + z_offset_safe, goal_ori=cube_s_ori,
-                                 post_goal_pos=cube_s_pos,
-                                 obst_pos=obst_pos))
+        # # Seq5 (goal -> cube S)
+        # seq.append(get_waypoints(pre_init_pos=goal_pos + z_offset_m,
+        #                          init_pos=goal_pos + z_offset_safe + z_offset_m, init_ori=goal_ori,
+        #                          goal_pos=cube_s_pos + z_offset_safe, goal_ori=cube_s_ori,
+        #                          post_goal_pos=cube_s_pos,
+        #                          obst_pos=obst_pos))
+        # # grip.append(0.0)
+        # grip.append(0.495)
+        #
+        # # Seq6 (cube S -> goal)
+        # seq.append(get_waypoints(pre_init_pos=cube_s_pos,
+        #                          init_pos=cube_s_pos + z_offset_safe, init_ori=cube_s_ori,
+        #                          goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_s, goal_ori=goal_ori,
+        #                          post_goal_pos=goal_pos + z_offset_m + z_offset_s,
+        #                          obst_pos=obst_pos))
         # grip.append(0.0)
-        grip.append(0.495)
-
-        # Seq6 (cube S -> goal)
-        seq.append(get_waypoints(pre_init_pos=cube_s_pos,
-                                 init_pos=cube_s_pos + z_offset_safe, init_ori=cube_s_ori,
-                                 goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_s, goal_ori=goal_ori,
-                                 post_goal_pos=goal_pos + z_offset_m + z_offset_s,
-                                 obst_pos=obst_pos))
-        grip.append(0.0)
 
         # 6. execute trajectories
 
@@ -584,7 +594,7 @@ if __name__ == '__main__':
         safe_pos = [[current_cartesian.x, current_cartesian.y, current_cartesian.z + 0.1, 0,
                     current_cartesian.theta_x, current_cartesian.theta_y, current_cartesian.theta_z]]
 
-        move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition=safe_pos)
+        move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition=safe_pos, log=False)
 
         move_to_action_position(base, "Home")
 
