@@ -1,0 +1,14 @@
+gymnasium==0.27.1
+joblib==1.2.0
+kortex_api==2.5.0.post6
+matplotlib==3.7.1
+mpi4py==3.1.4
+numpy==1.24.3
+opencv_python==4.7.0.72
+pandas==2.0.2
+pybullet==3.2.5
+scipy==1.10.1
+seaborn==0.12.2
+setuptools==67.8.0
+torch==2.0.1
+ultralytics==8.0.118

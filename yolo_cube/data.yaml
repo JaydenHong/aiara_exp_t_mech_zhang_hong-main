@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 12
+names: ['cube2-blue', 'cube2-green', 'cube2-orange', 'cube2-red', 'cube2-white', 'cube2-yellow', 'cube3-blue', 'cube3-green', 'cube3-orange', 'cube3-red', 'cube3-white', 'cube3-yellow']
+
+roboflow:
+  workspace: yologeometry
+  project: yolo-npu4p
+  version: 7
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/yologeometry/yolo-npu4p/dataset/7
