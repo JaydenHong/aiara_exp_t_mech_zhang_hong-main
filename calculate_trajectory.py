@@ -33,8 +33,8 @@ def execute(init_pos, goal_pos, obst_pos, file_name='progress.txt', file_path='s
     logger = EpochLogger(output_dir=file_path, output_fname=file_name)
     
     # Load the trained policy
-    # ac = torch.load('best_policy.pt',map_location ='cpu')
-    ac = torch.load('best_policy.pt', map_location='cuda')
+    ac = torch.load('best_policy.pt',map_location='cpu')
+    # ac = torch.load('best_policy.pt', map_location='cuda')
     
     obs, _ = env.reset(options=options)
     ter, tru, ep_ret, ep_len = 0, 0, 0, 0

@@ -116,8 +116,7 @@ def get_transformation(cube_centers, goal_center, cup_center):
 
 def execute():
     # Load the YOLOv8 model
-    model = YOLO('/home/aiara/Documents/yolo_cube/runs/detect/train/weights/best.pt')
-    # model = YOLO('yolov8m.pt')
+    model = YOLO('yolo_cube/runs/detect/train/weights/best.pt')
     # Open the video file
     video_path = "rtsp://192.168.1.10/color"
     cap = cv2.VideoCapture(video_path)
