@@ -13,6 +13,10 @@ from kortex_api.Exceptions.KServerException import KServerException
 from kortex_api.autogen.messages import DeviceConfig_pb2, Session_pb2, DeviceManager_pb2, VisionConfig_pb2
 import ObjectDetection
 import calculate_trajectory
+from virtual_camera import VirtualCamera
+from filepath_generator import filepath
+
+FILE_PATH, FILE_NUM = filepath()
 
 # Maximum allowed waiting time during actions (in seconds)
 TIMEOUT_DURATION = 20
@@ -30,7 +34,7 @@ CUBE4_Z_SAFE = CUBE3_HEIGHT + Z_OFFSET_SAFE
 
 # Goal pos to grip (half point)
 CUBE2_Z_GRIP = CUBE2_HEIGHT / 2
-CUBE3_Z_GRIP = CUBE3_HEIGHT / 2 - 0.01
+CUBE3_Z_GRIP = CUBE3_HEIGHT / 2
 CUBE4_Z_GRIP = CUBE4_HEIGHT / 2
 
 # Obstacle info
@@ -43,19 +47,9 @@ CUP_RADIUS_SAFE = 0.075
 # Vision Position
 VISION_POS = [0.356, 0.106, 0.562]
 
-# Base folder name
-base_folder_name = 'saved_data'
-
-# Find existing folders that match the base folder name
-existing_folders = [folder for folder in os.listdir('.') if folder.startswith(base_folder_name)]
-
-# Find the highest numbered folder among the existing matching folders
-folder_numbers = [int(folder[len(base_folder_name):]) for folder in existing_folders
-                    if folder[len(base_folder_name):].isdigit()]
-max_folder_number = max(folder_numbers)+1 if folder_numbers else 0
-FILE_PATH = f'{base_folder_name}{max_folder_number:02}'
-os.mkdir(FILE_PATH)
-
+# Flags
+movement_completed =False
+record_enabled =True
 
 option_dir = 'BC_32'
 
@@ -165,41 +159,18 @@ def autofocus(vision_config, vision_device_id):
 def record_video():
     global record_enabled
 
-    video_path = "rtsp://192.168.1.10/color"
-    output_file = "recorded_video.mp4"
-    output_width = 640
-    output_height = 480
-    output_fps = 30
-
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_file, fourcc, output_fps, (output_width, output_height))
-
-    # Open video capture
-    cap = cv2.VideoCapture(video_path)
-
-    # Start recording
-    i = 0
+    # access the virtual camera
+    frame_queue = mp.Queue()
+    virtual_camera = VirtualCamera(frame_queue)
+    virtual_camera.start()
+    # view the frames coming off the camera
+    print("haha")
     while record_enabled:
-        ret, frame = cap.read()
-        print(ret)
-        if ret:
-
-            cv2.imshow('Frame', frame)
-            out.write(frame)
-
-        print("CCC")
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        frame = frame_queue.get()
+        if frame is None:
             break
-
-
-    print("video stopped")
-    print("record_enabled:", record_enabled)
-    record_enabled = False
-    # Release the video capture and writer
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows()
+        cv2.imshow("Virtual Camera outside process", frame)
+        cv2.waitKey(1)
 
 
 REC_IDX = 1
@@ -440,7 +411,18 @@ def SendGripperCommands(base, position=0.0):
     print("gripping is done")
 
 
+
 if __name__ == '__main__':
+
+    # Turning on virtual camera
+    frame_queue = mp.Queue()
+    print(FILE_PATH)
+    virtual_camera = VirtualCamera(frame_queue, file_num=FILE_NUM)
+    virtual_camera.start()
+    print("waiting for virtual camera...")
+    # time.sleep(8)
+    os.mkdir(FILE_PATH)
+
     # Import the utilities helper module
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
     import utilities
@@ -469,13 +451,16 @@ if __name__ == '__main__':
         positions, rotations, sizes = ObjectDetection.execute()
         print(positions)
 
-        heights = [CUBE2_Z_GRIP, CUBE3_Z_GRIP, CUBE4_Z_GRIP, CUBE4_Z_GRIP, CUP_HEIGHT_SAFE]
+        cube_s_size, cube_m_size, cube_l_size = sizes
+        # sizes can be later used to determine how much gripper should open, not implemented yet though
+
+        heights = [CUBE2_Z_GRIP, CUBE3_Z_GRIP, CUBE4_Z_GRIP, CUBE3_Z_GRIP, CUP_HEIGHT_SAFE]
+        # goal height (=height(4) need to be changed to CUBE4_Z_GRIP instead of CUBE3_Z_GRIP in case of using 4x4x4 cube
+        # or be adjusted correspond to sizes input.
         cube_s_pos, cube_m_pos, cube_l_pos, goal_pos, obst_pos = [p+[h] for p, h in zip(positions, heights)]
         print(cube_s_pos, cube_m_pos, cube_l_pos, goal_pos, obst_pos)
         cube_s_ori, cube_m_ori, cube_l_ori = [[180, 0.01, rot] for rot in rotations]
 
-        cube_s_size, cube_m_size, cube_l_size = sizes
-        # sizes can be later used to determine how much gripper should open, not implemented yet though
 
         goal_ori = [180, 0.01, 90]
         z_offset_safe = np.array([0, 0, Z_OFFSET_SAFE])
@@ -569,4 +554,7 @@ if __name__ == '__main__':
 
         move_to_cartesian_trajectory(base, base_cyclic, waypointsDefinition=safe_pos, log=False)
 
+        # 7. Return home
+
+        virtual_camera.stop()
         move_to_action_position(base, "Home")
