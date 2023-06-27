@@ -59,6 +59,7 @@ class VirtualCamera:
 
         cap.release()
         out.release()
+        cv2.destroyAllWindows()
         self.frame_queue.put(None)
 
 

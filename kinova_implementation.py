@@ -22,8 +22,8 @@ FILE_PATH, FILE_NUM = filepath()
 TIMEOUT_DURATION = 20
 
 # Object info
-CUBE2_HEIGHT = 0.047
-CUBE3_HEIGHT = 0.058
+CUBE2_HEIGHT = 0.0477
+CUBE3_HEIGHT = 0.0585
 CUBE4_HEIGHT = 0.065
 
 # One Step behind the Goal pos to grip (45mm offset)
@@ -402,7 +402,8 @@ def SendGripperCommands(base, position=0.0):
             current_grip = gripper_measure.finger[0].value
 
             print("Current position is : {0}".format(current_grip))
-            if abs(current_grip - position) < 0.01 or abs(previous_grip - current_grip) < 0.0001:
+            if abs(current_grip - position) < 0.01 or\
+                    (abs(previous_grip - current_grip) < 0.0001 and abs(previous_grip - current_grip)>0) :
                 break
             previous_grip = current_grip
         else:  # Else, no finger present in answer, end loop
@@ -441,14 +442,15 @@ if __name__ == '__main__':
         # Execute movement sequence
 
         # 0. Move to Home pos
-        move_to_action_position(base, "Home")
+        # move_to_action_position(base, "Home")
         SendGripperCommands(base, position=0.0)
 
         # 2. Move to vis pos
         move_to_action_position(base, "vision_pos_joint")
+        time.sleep(1)
 
         # 3. Get position
-        positions, rotations, sizes = ObjectDetection.execute()
+        positions, rotations, sizes = ObjectDetection.execute(file_num=FILE_NUM)
         print(positions)
 
         cube_s_size, cube_m_size, cube_l_size = sizes

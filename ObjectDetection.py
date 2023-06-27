@@ -114,7 +114,7 @@ def get_transformation(cube_centers, goal_center, cup_center):
     return coordinates
 
 
-def execute():
+def execute(file_num=0):
     # Load the YOLOv8 model
     model = YOLO('yolo_cube/runs/detect/train/weights/best.pt')
     # Open the video file
@@ -157,7 +157,7 @@ def execute():
 
 
                 # visualize on annotate frame
-                annotated_frame = results[0].plot(labels=True)
+                annotated_frame = results[0].plot(labels=False)
 
                 # get goal pos
 
@@ -253,6 +253,7 @@ def execute():
                     sizes_robot = [x for x in cube_angles]
                     cap.release()
                     cv2.destroyAllWindows()
+                    cv2.imwrite(f'saved_img/object_detection{file_num:02}.jpg', annotated_frame)
                     return positions_robot, rotations_robot, sizes_robot
                     # return [cube_s_pos, cube_m_pos, cube_l_pos, goal_pos, cup_pos],
                     #        [cube_s_rot, cube_m_rot, cube_l_rot],
