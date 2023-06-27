@@ -27,7 +27,7 @@ CUBE3_HEIGHT = 0.0585
 CUBE4_HEIGHT = 0.065
 
 # One Step behind the Goal pos to grip (45mm offset)
-Z_OFFSET_SAFE = 0.06
+Z_OFFSET_SAFE = 0.07
 CUBE2_Z_SAFE = CUBE2_HEIGHT + Z_OFFSET_SAFE
 CUBE3_Z_SAFE = CUBE3_HEIGHT + Z_OFFSET_SAFE
 CUBE4_Z_SAFE = CUBE3_HEIGHT + Z_OFFSET_SAFE
@@ -456,7 +456,7 @@ if __name__ == '__main__':
         cube_s_size, cube_m_size, cube_l_size = sizes
         # sizes can be later used to determine how much gripper should open, not implemented yet though
 
-        heights = [CUBE2_Z_GRIP, CUBE3_Z_GRIP, CUBE4_Z_GRIP, CUBE3_Z_GRIP, CUP_HEIGHT_SAFE]
+        heights = [CUBE2_Z_GRIP, CUBE3_Z_GRIP, CUBE3_Z_GRIP, CUBE3_Z_GRIP, CUP_HEIGHT_SAFE]
         # goal height (=height(4) need to be changed to CUBE4_Z_GRIP instead of CUBE3_Z_GRIP in case of using 4x4x4 cube
         # or be adjusted correspond to sizes input.
         cube_s_pos, cube_m_pos, cube_l_pos, goal_pos, obst_pos = [p+[h] for p, h in zip(positions, heights)]
@@ -466,6 +466,7 @@ if __name__ == '__main__':
 
         goal_ori = [180, 0.01, 90]
         z_offset_safe = np.array([0, 0, Z_OFFSET_SAFE])
+        z_offset_l = np.array([0, 0, CUBE3_HEIGHT])
         z_offset_m = np.array([0, 0, CUBE3_HEIGHT])
         z_offset_s = np.array([0, 0, CUBE2_HEIGHT])
 
@@ -529,8 +530,8 @@ if __name__ == '__main__':
         # Seq6 (cube S -> goal)
         seq.append(get_waypoints(pre_init_pos=cube_s_pos,
                                  init_pos=cube_s_pos + z_offset_safe, init_ori=cube_s_ori,
-                                 goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_s, goal_ori=goal_ori,
-                                 post_goal_pos=goal_pos + z_offset_m + z_offset_s,
+                                 goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_l, goal_ori=goal_ori,
+                                 post_goal_pos=goal_pos + z_offset_m + z_offset_l,
                                  obst_pos=obst_pos))
         grip.append(0.0)
 
