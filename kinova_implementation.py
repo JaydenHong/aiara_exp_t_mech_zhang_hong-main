@@ -22,7 +22,7 @@ FILE_PATH, FILE_NUM = filepath()
 TIMEOUT_DURATION = 20
 
 # Object info
-CUBE2_HEIGHT = 0.0477
+CUBE2_HEIGHT = 0.048
 CUBE3_HEIGHT = 0.0585
 CUBE4_HEIGHT = 0.065
 
@@ -194,7 +194,7 @@ def record_actual_pos(base, sampling_frequency):
             pose_list.append(base.ComputeForwardKinematics(input_joint_angles))
             # print(current_time, pose.x, pose.y, pose.z, pose.theta_x, pose.theta_y, pose.theta_z)
         except Exception as exception:
-            print("FK failed:", str(exception))
+            print("FK failed:")
         remaining_time = sampling_frequency * i - (time.time() - start_time)
         if remaining_time > 0:
             time.sleep(remaining_time)
@@ -513,14 +513,14 @@ if __name__ == '__main__':
         # Seq4 (cube M -> goal)
         seq.append(get_waypoints(pre_init_pos=cube_m_pos,
                                  init_pos=cube_m_pos + z_offset_safe, init_ori=cube_m_ori,
-                                 goal_pos=goal_pos + z_offset_safe + z_offset_m, goal_ori=goal_ori,
-                                 post_goal_pos=goal_pos + z_offset_m,
+                                 goal_pos=goal_pos + z_offset_safe + z_offset_l, goal_ori=goal_ori,
+                                 post_goal_pos=goal_pos + z_offset_l,
                                  obst_pos=obst_pos))
         grip.append(0.0)
 
         # Seq5 (goal -> cube S)
-        seq.append(get_waypoints(pre_init_pos=goal_pos + z_offset_m,
-                                 init_pos=goal_pos + z_offset_safe + z_offset_m, init_ori=goal_ori,
+        seq.append(get_waypoints(pre_init_pos=goal_pos + z_offset_l,
+                                 init_pos=goal_pos + z_offset_safe + z_offset_l, init_ori=goal_ori,
                                  goal_pos=cube_s_pos + z_offset_safe, goal_ori=cube_s_ori,
                                  post_goal_pos=cube_s_pos,
                                  obst_pos=obst_pos))
@@ -531,7 +531,7 @@ if __name__ == '__main__':
         seq.append(get_waypoints(pre_init_pos=cube_s_pos,
                                  init_pos=cube_s_pos + z_offset_safe, init_ori=cube_s_ori,
                                  goal_pos=goal_pos + z_offset_safe + z_offset_m + z_offset_l, goal_ori=goal_ori,
-                                 post_goal_pos=goal_pos + z_offset_m + z_offset_l,
+                                 post_goal_pos=goal_pos + z_offset_m + z_offset_s,
                                  obst_pos=obst_pos))
         grip.append(0.0)
 
